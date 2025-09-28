@@ -1,0 +1,24 @@
+# Maven build output
+c.txt
+*.jar
+
+# IDE files
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Spring Boot wrapper
+mvnw.cmd
+#mvnw
+
+# Optional: temporary files
+*.tmp
