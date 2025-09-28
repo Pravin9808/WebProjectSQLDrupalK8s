@@ -1,0 +1,97 @@
+kubectl create secret generic drupal-db-secret --from-literal=mysql-root-password=rootpass --from-literal=mysql-user=drupaluser --from-literal=mysql-password=drupalpass
+🔐 2. Site Maintenance Account (Admin Login)
+Field	What to Enter
+Username	Choose an admin username (e.g., admin)
+Password	Choose a strong password (e.g., Admin@123456)
+Email address	Enter your email (e.g., your-email@example.com)
+Site information
+Site name
+Test
+Site email address
+your-email@example.com
+Automated emails, such as registration information, will be sent from this address. Use an address ending in your site's domain to help prevent these emails from being flagged as spam.
+
+Site maintenance account
+Username
+admin
+
+----
+Amazon ECR---
+create Repository
+1. Private/Public
+2.Repository Name: springbook-eks-mysql
+3. Scan on push
+4. Kms encryption if required
+
+once Repository created go to repository section-- then click view push commands
+--Retrieve an authantication tokenand authenticate your docker client to your registry
+use AWS cli
+1.aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 2583333333.dke.ecr.ap-southeast-2.amazonaws.com
+2.after login build docker image docker build -t springboot-eks .
+3.docker tag springboot-mysql-eks:latest 2583333333.dke.ecr.ap-southeast-2.amazonaws.com/spring-myeks:latest
+4. dokcer push 2583333333.dke.ecr.ap-southeast-2.amazonaws.com/spring-myeks:latest
+
+--
+Aws create IAM policyfor aws load balancer controller. for more information click
+i.Download an IAM policy for the AWS Load Balancer Controller that allows it to make calls to AWS APIs on your behalf.
+
+
+ii.curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.13.3/docs/install/iam_policy.json
+If you are a non-standard AWS partition, such as a Government or China region, review the policies on GitHub and download the appropriate policy for your region.
+Create an IAM policy using the policy downloaded in the previous step.
+
+
+iii.aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam_policy.json
+
+---
+create cluster using command eksctl create cluster -f cluster.yaml
+Replace the values for cluster name, region code, and account ID.
+
+eksctl create iamserviceaccount \
+    --cluster=<cluster-name> \
+    --namespace=kube-system \
+    --name=aws-load-balancer-controller \
+    --attach-policy-arn=arn:aws:iam::<AWS_ACCOUNT_ID>:policy/AWSLoadBalancerControllerIAMPolicy \
+    --override-existing-serviceaccounts \
+    --region <aws-region-code> \
+    --approve
+once cluster created then run following command:
+    Add the eks-charts Helm chart repository. AWS maintains this repository on GitHub.
+    helm repo add eks https://aws.github.io/eks-charts
+    Update your local repo to make sure that you have the most recent charts.
+
+
+helm repo update eks
+Install the AWS Load Balancer Controller.
+
+If you’re deploying the controller to Amazon EC2 nodes that have restricted access to the Amazon EC2 instance metadata service (IMDS), or if you’re deploying to Fargate or Amazon EKS Hybrid Nodes, then add the following flags to the helm command that follows:
+
+--set region=region-code
+
+--set vpcId=vpc-xxxxxxxx
+
+Replace my-cluster with the name of your cluster. In the following command, aws-load-balancer-controller is the Kubernetes service account that you created in a previous step.
+
+For more information about configuring the helm chart, see values.yaml on GitHub.
+
+
+helm install/upgrade aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=my-cluster \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --version 1.13.0
+
+  Private subnets – Must be tagged in the following format. This is so that Kubernetes and the AWS load balancer controller know that the subnets can be used for internal load balancers. If you use eksctl or an Amazon EKS AWS CloudFormation template to create your VPC after March 26, 2020, the subnets are tagged appropriately when created. For more information about the Amazon EKS AWS CloudFormation VPC templates, see Create an Amazon VPC for your Amazon EKS cluster.
+
+    Key – kubernetes.io/role/internal-elb
+
+    Value – 1
+
+Public subnets – Must be tagged in the following format. This is so that Kubernetes knows to use only the subnets that were specified for external load balancers. This way, Kubernetes doesn’t choose a public subnet in each Availability Zone (lexicographically based on their subnet ID). If you use eksctl or an Amazon EKS AWS CloudFormation template to create your VPC after March 26, 2020, the subnets are tagged appropriately when created. For more information about the Amazon EKS AWS CloudFormation VPC templates, see Create an Amazon VPC for your Amazon EKS cluster.
+
+    Key – kubernetes.io/role/elb
+
+    Value – 1
