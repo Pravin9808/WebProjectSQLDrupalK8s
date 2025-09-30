@@ -13,7 +13,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: backend
+          app: mysql-service
     ports:
     - protocol: TCP
       port: 8080
