@@ -24,3 +24,4 @@ A web project deployed on Kubernetes using Drupal frontend and MySQL backend wit
    kubectl apply -f Deployment/drupal.yaml
 5. Configure ingress / ALB as needed:
    kubectl apply -f Deployment/Albingress.yaml
+   
